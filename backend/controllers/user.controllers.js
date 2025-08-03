@@ -18,33 +18,54 @@ export const getCurrentUser=async (req,res)=>{
 }
 
 
-export const updateProfile=async (req,res)=>{
-    try {
-       let {firstName,lastName,userName,headline,location,gender} =req.body
-       let skills=req.body.skills?JSON.parse(req.body.skills):[]
-       let education=req.body.education?JSON.parse(req.body.education):[]
-       let experience=req.body.experience?JSON.parse(req.body.experience):[]
-   let profileImage;
-   let coverImage
-   console.log(req.files)
-       if(req.files.profileImage){
-        profileImage=await uploadOnCloudinary(req.files.profileImage[0].path)
-       }
-       if(req.files.coverImage){
-        coverImage=await uploadOnCloudinary(req.files.coverImage[0].path)
-       }
+export const updateProfile = async (req, res) => {
+  try {
+    let {
+      firstName,
+      lastName,
+      userName,
+      headline,
+      location,
+      gender,
+    } = req.body;
 
-       let user=await User.findByIdAndUpdate(req.userId,{
-        firstName,lastName,userName,headline,location,gender,skills,education,experience,profileImage,coverImage
-       },{new:true}).select("-password")
-       return res.status(200).json(user)
+    let skills = req.body.skills ? JSON.parse(req.body.skills) : [];
+    let education = req.body.education ? JSON.parse(req.body.education) : [];
+    let experience = req.body.experience ? JSON.parse(req.body.experience) : [];
 
-    } catch (error) {
-        console.log(error)
-        return res.status(500).json({message:`update profile error ${error}`})
+    let updateObj = {
+      firstName,
+      lastName,
+      userName,
+      headline,
+      location,
+      gender,
+      skills,
+      education,
+      experience,
+    };
+
+    // Handle image uploads
+    if (req.files?.profileImage?.[0]) {
+      const uploadedProfileImg = await uploadOnCloudinary(req.files.profileImage[0].path);
+      updateObj.profileImage = uploadedProfileImg;
     }
-}
 
+    if (req.files?.coverImage?.[0]) {
+      const uploadedCoverImg = await uploadOnCloudinary(req.files.coverImage[0].path);
+      updateObj.coverImage = uploadedCoverImg;
+    }
+
+    const user = await User.findByIdAndUpdate(req.userId, updateObj, {
+      new: true,
+    }).select("-password");
+
+    return res.status(200).json(user);
+  } catch (error) {
+    console.error("Update profile error:", error);
+    return res.status(500).json({ message: `update profile error ${error}` });
+  }
+};
 
 export const getprofile=async (req,res)=>{
     try {
